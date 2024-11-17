@@ -87,10 +87,18 @@ class PlygonModel():
         self.rotation_angle = 0
         self.x = 0
         self.y = 0
+        self.vx = 0
+        self.vy = 0
+        self.angular_velocity = 0
 
     def transformed(self):
         rotated = [rotate2d(self.rotation_angle, v) for v in self.points]
         return [add((self.x, self.y), v) for v in rotated]
+    
+    def move(self, milliseconds):
+        dx, dy = self.vx * milliseconds / 1000.0, self.vy * milliseconds / 1000.0
+        self.x, self.y = add((self.x,self.y), (dx,dy))
+        self.rotation_angle += self.angular_velocity * milliseconds / 1000.0
 
     def does_intersect(self, other_segment):
         for segment in self.segments():
@@ -121,6 +129,9 @@ class Asteroid(PlygonModel):
         vs = [to_cartesian((uniform(0.5, 1.0), 2*pi*i/sides))
               for i in range(0, sides)]
         super().__init__(vs)
+        self.vx = uniform(-1,1)
+        self.vy = uniform(-1,1)
+        self.angular_velocity = uniform(-pi/2,pi/2)
 
 
 ship = Ship()
@@ -178,6 +189,9 @@ def main():
 
         milliseconds = clock.get_time()
         keys = pygame.key.get_pressed()
+        
+        for ast in asteroids:
+            ast.move(milliseconds)
 
         if keys[pygame.K_LEFT]:
             ship.rotation_angle += milliseconds * (2*pi / 1000)
